@@ -1,0 +1,726 @@
+<!-- @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap'); -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flood Monitoring Dashboard</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+/* BODY */
+body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:linear-gradient(135deg,#eef2f7,#e3ecff);
+    height:100vh;
+    overflow:hidden; /* 🔥 NO SCROLL */
+}
+
+/* SIDEBAR */
+.sidebar{
+    width:85px;
+    height:100vh;
+    background:linear-gradient(180deg,#1e3c72,#2a5298);
+    position:fixed;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding-top:15px;
+    box-shadow:4px 0 20px rgba(0,0,0,0.1);
+}
+
+.sidebar div{
+    margin:18px;
+    color:white;
+    font-size:20px;
+    cursor:pointer;
+    transition:0.3s;
+}
+.sidebar div:hover{
+    transform:scale(1.2);
+}
+
+/* TOPBAR */
+.topbar{
+    margin-left:85px;
+    height:60px;
+    background:rgba(255,255,255,0.7);
+    backdrop-filter:blur(12px);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 25px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.05);
+}
+
+/* MAIN */
+.main{
+    margin-left:85px;
+    padding:15px;
+    height:calc(100vh - 60px); /* 🔥 fit screen */
+    overflow:hidden;
+}
+
+/* GRID */
+.grid{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:20px;
+    height:100%;
+}
+
+/* CARD */
+.card{
+    background:rgba(255,255,255,0.65);
+    backdrop-filter:blur(15px);
+    border-radius:15px;
+    padding:15px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.08);
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:translateY(-4px);
+}
+
+/* MAP */
+#map{
+    flex:1; /* 🔥 auto fit remaining space */
+    border-radius:12px;
+    overflow:hidden;
+}
+
+/* SENSOR ROW */
+.sensor-row{
+    display:flex;
+    gap:12px;
+    margin-bottom:10px;
+}
+
+/* SENSOR */
+.sensor{
+    flex:1;
+    background:rgba(255,255,255,0.8);
+    padding:12px;
+    border-radius:12px;
+    text-align:center;
+    box-shadow:0 3px 10px rgba(0,0,0,0.05);
+    border-left:4px solid #2a5298;
+}
+
+.sensor h4{
+    margin:0;
+    font-size:12px;
+    color:#666;
+}
+
+.sensor p{
+    font-size:16px;
+    font-weight:600;
+    margin-top:5px;
+}
+
+/* RIGHT PANEL STACK */
+.grid > div:last-child{
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+    height:100%;
+}
+
+/* GRAPH */
+canvas{
+    max-height:180px;
+}
+
+/* ALERT */
+.alert{
+    padding:12px;
+    border-radius:10px;
+    font-weight:600;
+    font-size:14px;
+    
+}
+
+/* BUTTON */
+button{
+    margin-top:10px;
+    padding:12px;
+    border:none;
+    background:linear-gradient(45deg,#1e88e5,#0c6493);
+    color:white;
+    border-radius:8px;
+    cursor:pointer;
+    width:100%;
+    font-weight:600;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.02);
+}
+
+/* ============================= */
+/* 📱 MOBILE (Below 768px) */
+/* ============================= */
+@media (max-width: 768px){
+
+    /* SIDEBAR HIDE */
+    .sidebar{
+        display:none;
+    }
+
+    /* TOPBAR FULL WIDTH */
+    .topbar{
+        margin-left:0;
+        padding:0 15px;
+    }
+
+    /* MAIN */
+    .main{
+        margin-left:0;
+        padding:10px;
+        height:auto;
+        overflow:auto;
+    }
+
+    /* GRID → STACK */
+    .grid{
+        grid-template-columns:1fr;
+        gap:15px;
+        height:auto;
+    }
+
+    /* SENSOR STACK */
+    .sensor-row{
+        flex-direction:column;
+    }
+
+    /* MAP SIZE */
+    #map{
+        height:250px;
+    }
+
+    /* GRAPH */
+    canvas{
+        max-height:150px;
+    }
+}
+
+
+/* ============================= */
+/* 💻 TABLET (768px - 1024px) */
+/* ============================= */
+@media (max-width: 768px){
+
+    body{
+        overflow-x:hidden;
+        overflow-y:auto;
+        height:auto;
+    }
+
+    /* HIDE SIDEBAR */
+    .sidebar{
+        display:none;
+    }
+
+    /* TOPBAR */
+    .topbar{
+        margin-left:0;
+        height:auto;
+        padding:14px 15px;
+        flex-direction:column;
+        align-items:flex-start;
+        gap:8px;
+    }
+
+    .topbar h2{
+        font-size:20px;
+        margin:0;
+    }
+
+    #TempTop{
+        font-size:16px;
+        font-weight:600;
+        color:#0c6493;
+    }
+
+    /* MAIN */
+    .main{
+        margin-left:0;
+        padding:10px;
+        height:auto;
+        overflow:visible;
+    }
+
+    /* GRID STACK */
+    .grid{
+        grid-template-columns:1fr;
+        gap:15px;
+        height:auto;
+    }
+
+    /* SENSOR STACK */
+    .sensor-row{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-bottom:15px;
+    }
+
+    .sensor{
+        padding:12px 8px;
+        border-radius:12px;
+    }
+
+    .sensor h4{
+        font-size:11px;
+    }
+
+    .sensor p{
+        font-size:14px;
+        word-break:break-word;
+    }
+
+    /* CARDS */
+    .card{
+        padding:15px;
+        border-radius:14px;
+        height:auto;
+    }
+
+    .card h3{
+        font-size:18px;
+        margin-top:0;
+        margin-bottom:12px;
+    }
+
+    /* MAP */
+    #map {
+    width: 100%;
+    height: 280px !important;
+    min-height: 280px;
+    display: block;
+    border-radius: 12px;
+    z-index: 1;
+}
+
+    /* GRAPH */
+    canvas{
+        max-height:220px !important;
+    }
+
+    /* ALERT */
+    .alert{
+        font-size:14px;
+        padding:12px;
+        word-break:break-word;
+    }
+
+    /* BUTTON */
+    button{
+        width:100%;
+        padding:14px;
+        font-size:15px;
+        margin-top:12px;
+    }
+
+    /* PREDICTION */
+    #FutureRain{
+        font-size:14px;
+        line-height:1.6;
+        margin-top:12px;
+    }
+
+    /* LEAFLET POPUP */
+    .leaflet-popup-content{
+        font-size:12px;
+        line-height:1.5;
+    }
+
+    .leaflet-control-layers{
+        font-size:11px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+<div>🌧</div>
+<div>📍</div>
+<div>📊</div>
+<div>⚙️</div>
+</div>
+
+<div class="topbar">
+<h2>Flood Monitoring Dashboard</h2>
+<div id="TempTop">--°C</div>
+</div>
+
+<div class="main">
+<div class="grid">
+
+<!-- LEFT -->
+<div class="card">
+
+<!-- 🔥 MOVED ABOVE -->
+<div class="sensor-row">
+<div class="sensor">
+<h4>Water Level</h4>
+<p id="WaterLevel">--</p>
+</div>
+
+<div class="sensor">
+<h4>Rainfall</h4>
+<p id="Rainfall">--</p>
+</div>
+
+<div class="sensor">
+<h4>Latitude</h4>
+<p id="Latitude">--</p>
+</div>
+
+<div class="sensor">
+<h4>Longitude</h4>
+<p id="Longitude">--</p>
+</div>
+</div>
+
+<div id="map"></div>
+
+</div>
+
+<!-- RIGHT -->
+<div>
+
+<div class="card">
+<h3>Trend Graph</h3>
+<canvas id="chart"></canvas>
+</div>
+
+<div class="card">
+<h3>Alerts & Prediction</h3>
+
+<div class="alert">
+<p id="AlertCondition">No Alert</p>
+</div>
+
+<button onclick="predictRainML()">Predict Rainfall</button>
+<p id="FutureRain"></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+
+<!-- ONLY CHANGES ARE IN GRAPH PART -->
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+/* FIREBASE */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  databaseURL: "https://flood-alertation-default-rtdb.firebaseio.com"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const sensorRef = ref(db,'sensor_data');
+
+/* WEATHER API */
+const API_KEY = "31cace19702d21fcfe52b2f6a429ccb1";
+
+/* GLOBAL */
+let currentTemp = 0;
+let currentHumidity = 0;
+let currentWind = 0;
+
+/* MAP */
+var map = L.map('map').setView([9.9252,78.1198], 12);
+
+var normalMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+var satelliteMap = L.tileLayer(
+'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+);
+
+var satelliteLabels = L.layerGroup([
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'),
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}')
+]);
+
+L.control.layers({
+"Normal": normalMap,
+"Satellite": satelliteMap,
+"Hybrid": satelliteLabels
+}).addTo(map);
+
+setTimeout(()=>{ map.invalidateSize(); },500);
+
+let marker;
+
+/* ================= GRAPH ================= */
+
+let rainfallData = [];
+let waterLevelData = [];
+let labels = [];
+
+const chart = new Chart(document.getElementById("chart"), {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Rainfall (mm)',
+                data: rainfallData,
+                borderColor: 'blue',
+                backgroundColor: 'rgba(0,0,255,0.1)',
+                tension: 0.3
+            },
+            {
+                label: 'Water Level (cm)',
+                data: waterLevelData,
+                borderColor: 'green',
+                backgroundColor: 'rgba(0,255,0,0.1)',
+                tension: 0.3
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+/* LOCATION */
+let cachedLocation = null;
+
+function getUserLocation(){
+    return new Promise((resolve, reject)=>{
+
+        // use saved location if already available
+        if(cachedLocation){
+            resolve(cachedLocation);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos)=>{
+                cachedLocation = {
+                    lat: pos.coords.latitude,
+                    lon: pos.coords.longitude
+                };
+                resolve(cachedLocation);
+            },
+            (err)=> reject(err)
+        );
+    });
+}
+
+/* WEATHER */
+async function getWeather(lat, lon){
+    try{
+        const res = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+        );
+        const d = await res.json();
+        return d.weather[0].main;
+    }catch{
+        return null;
+    }
+}
+
+/* REALTIME */
+onValue(sensorRef, async (snap)=>{
+
+    const d = snap.val();
+    if(!d) return;
+
+    let lat = d.latitude;
+    let lon = d.longitude;
+
+    if(!lat || lat === 0){
+        const loc = await getUserLocation();
+        lat = loc.lat;
+        lon = loc.lon;
+    }
+
+    /* UI */
+    document.getElementById("Latitude").innerText = lat.toFixed(5);
+    document.getElementById("Longitude").innerText = lon.toFixed(5);
+    document.getElementById("Rainfall").innerText = d.rainfall_intensity + " mm";
+    document.getElementById("WaterLevel").innerText = d.water_level + " cm";
+
+    /* GRAPH */
+    labels.push(new Date().toLocaleTimeString());
+    rainfallData.push(d.rainfall_intensity);
+    waterLevelData.push(d.water_level);
+
+    if(labels.length > 10){
+        labels.shift();
+        rainfallData.shift();
+        waterLevelData.shift();
+    }
+
+    chart.update();
+
+    /* WEATHER */
+    const weather = await getWeather(lat, lon);
+
+    try{
+        const res = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+        );
+        const w = await res.json();
+
+        currentTemp = w.main.temp;
+        currentHumidity = w.main.humidity;
+        currentWind = w.wind.speed;
+
+        document.getElementById("TempTop").innerText = currentTemp + "°C";
+    }catch{}
+
+    /* ===== STATUS LOGIC ===== */
+let color = "green";
+let status = "Safe";
+
+/* FLOOD ALERT */
+if (
+    d.rainfall_intensity >= 30 &&
+    d.water_level >= 25
+) {
+    color = "red";
+    status = "Flood Alert";
+}
+
+/* WARNING */
+else if (
+    d.rainfall_intensity >= 20 ||
+    d.water_level >= 10 ||
+    weather === "Rain" ||
+    weather === "Thunderstorm"
+) {
+    color = "orange";
+    status = "Warning";
+}
+
+/* SAFE */
+else {
+    color = "green";
+    status = "Safe";
+}
+
+/* ===== ALERT BOX ===== */
+document.getElementById("AlertCondition").innerText = status;
+
+const alertBox = document.querySelector(".alert");
+
+if (status === "Flood Alert") {
+    alertBox.style.background = "rgba(255, 0, 0, 0.2)";
+    alertBox.style.borderLeft = "6px solid red";
+    alertBox.style.color = "red";
+}
+else if (status === "Warning") {
+    alertBox.style.background = "rgba(255, 165, 0, 0.2)";
+    alertBox.style.borderLeft = "6px solid orange";
+    alertBox.style.color = "orange";
+}
+else {
+    alertBox.style.background = "rgba(0, 200, 0, 0.15)";
+    alertBox.style.borderLeft = "6px solid green";
+    alertBox.style.color = "green";
+}
+
+    /* MAP */
+    const icon = L.icon({
+        iconUrl:`https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
+        iconSize:[40,40]
+    });
+
+    if(marker) map.removeLayer(marker);
+
+    marker = L.marker([lat,lon],{icon}).addTo(map);
+
+    marker.bindPopup(`
+        <b>📍 Sensor Location</b><br>
+        Lat: ${lat}<br>
+        Lon: ${lon}<br><br>
+        🌧 Rainfall: ${d.rainfall_intensity}<br>
+        🌊 Water Level: ${d.water_level}<br>
+        🌦 Weather: ${weather || "N/A"}<br>
+        🚨 Status: <b>${status}</b>
+    `).openPopup();
+
+    map.setView([lat,lon],15);
+
+});
+
+/* ML */
+window.predictRainML = async function(){
+
+    if(!currentTemp){
+        alert("Waiting for data...");
+        return;
+    }
+
+    try{
+        const res = await fetch("http://127.0.0.1:5000/predict",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({
+                temp: currentTemp,
+                humidity: currentHumidity,
+                wind: currentWind
+            })
+        });
+
+        const result = await res.json();
+
+        /* 🔥 STATUS BASED PREDICTION */
+        const status = document.getElementById("AlertCondition").innerText;
+
+        let predictionText = "";
+
+        if(status === "Flood Risk"){
+            predictionText = "⚠️ High Risk of Flooding! Take Immediate Action!";
+        }
+        else if(status === "Warning"){
+            predictionText = "⚠️ Moderate Risk. Stay Alert.";
+        }
+        else{
+            predictionText = "✅ Safe Conditions.";
+        }
+
+        document.getElementById("FutureRain").innerHTML =
+        `🌧 Rainfall: ${result.rainfall} mm <br>
+         🚨 Risk: ${status} <br>
+         ${predictionText}`;
+
+    }catch{
+        alert("Backend not running ❌");
+    }
+};
+
+</script>
+
+</body>
+</html>

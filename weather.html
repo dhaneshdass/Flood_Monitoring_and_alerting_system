@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Weather Forecast</title>
+<link rel="stylesheet" href="styles.css">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f2f2f2;
+}
+
+.container {
+    width: 80%;
+    margin: 25px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.weather-box {
+    width: 900px;
+    height: 600px;   /* fixed screen fit */
+    padding: 25px 35px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ffffff, #f7fbff);
+    box-shadow:
+        0 12px 30px rgba(0,0,0,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.8);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.weather-box::before {
+    content: "";
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    background: rgba(12, 100, 147, 0.08);
+    border-radius: 50%;
+    top: -40px;
+    right: -40px;
+}
+
+.weather-box::after {
+    content: "";
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    background: rgba(12, 100, 147, 0.05);
+    border-radius: 50%;
+    bottom: -30px;
+    left: -30px;
+}
+
+.weather-box h2 {
+    font-size: 24px;
+    color: #0c6493;
+    margin-bottom: 18px;
+    font-weight: 700;
+    position: relative;
+    z-index: 2;
+}
+
+.weather-box p {
+    width: 75%;
+    margin: 10px auto;
+    padding: 12px 18px;
+    font-size: 18px;
+    font-weight: 500;
+    color: #1f2937;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 5px 14px rgba(0,0,0,0.06);
+    transition: 0.3s;
+    position: relative;
+    z-index: 2;
+}
+
+.weather-box p:hover {
+    transform: scale(1.02);
+}
+
+#Temp {
+    background: linear-gradient(135deg, #0c6493, #1e88e5);
+    color: white;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+button {
+    margin-top: 18px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #0c6493, #1e88e5);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(12,100,147,0.25);
+    transition: 0.3s;
+    position: relative;
+    z-index: 2;
+}
+
+button:hover {
+    transform: translateY(-2px);
+}
+
+#FutureRain {
+    width: 78%;
+    margin-top: 14px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    border: 2px dashed #0c6493;
+    background: #eef7ff;
+    color: #0c6493;
+}
+
+/* Mobile */
+@media screen and (max-width: 768px) {
+
+    body {
+        overflow-x: hidden;
+    }
+
+    /* NAVBAR */
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 15px;
+        position: relative;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        width: 100%;
+    }
+
+    .logo img {
+        width: 45px;
+        height: 35px;
+    }
+
+    .logo h1 {
+        font-size: 18px;
+        margin-left: 10px;
+    }
+
+    .menu-icon {
+        display: flex !important;
+        flex-direction: column;
+        gap: 4px;
+        position: absolute;
+        top: 18px;
+        right: 15px;
+        cursor: pointer;
+    }
+
+    .bar {
+        width: 28px;
+        height: 3px;
+        background: white;
+        border-radius: 5px;
+    }
+
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background: #0c6493;
+        margin-top: 15px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .nav-links a {
+        padding: 14px;
+        text-align: center;
+        color: white;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .show-nav {
+        display: flex !important;
+    }
+
+    /* CONTAINER */
+    .container {
+        width: 95%;
+        margin: 20px auto;
+    }
+
+    /* WEATHER BOX */
+    .weather-box {
+        width: 100%;
+        height: auto;
+        padding: 20px 15px;
+        border-radius: 18px;
+    }
+
+    .weather-box h2 {
+        font-size: 22px;
+        margin-bottom: 15px;
+    }
+
+    .weather-box p {
+        width: 100%;
+        font-size: 15px;
+        padding: 14px 10px;
+        margin: 10px 0;
+    }
+
+    #Temp {
+        font-size: 18px;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        font-size: 15px;
+        margin-top: 15px;
+    }
+
+    #FutureRain {
+        width: 100%;
+        font-size: 14px;
+        padding: 14px;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="logo">
+        <img src="https://tse4.mm.bing.net/th?id=OIP.m98o3yW6eMNLtZE5A9-QtQHaHa&pid=Api&P=0&h=180">
+        <h1>Flood Monitoring System</h1>
+    </div>
+
+    <div class="menu-icon" onclick="toggleNav()">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+
+    <div class="nav-links" id="nav-links">
+        <a href="index.html">Home</a>
+        <a href="Realtime records.html">Realtime Records</a>
+        <a href="location.html">Location</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="Graphs.html">Trend Graph</a>
+        <a href="weather.html">Weather</a>
+        <a href="login.html">Login</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="weather-box">
+
+        <h2>🌦️ Sensor Weather</h2>
+
+        <p id="City">Location: Waiting for sensor...</p>
+        <p id="Temp">Temperature: --</p>
+        <p id="Weather">Condition: --</p>
+        <p id="Humidity">Humidity: --</p>
+        <p id="Wind">Wind Speed: --</p>
+
+        <br>
+
+        <!-- 🔥 UPDATED BUTTON -->
+        <button onclick="predictRainML()">Predict Rainfall</button>
+
+        <p id="FutureRain">Click button to predict rainfall</p>
+
+    </div>
+</div>
+
+<script>
+function toggleNav(){
+    document.getElementById("nav-links").classList.toggle("show-nav");
+}
+</script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+/* Firebase */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "flood-alertation.firebaseapp.com",
+  databaseURL: "https://flood-alertation-default-rtdb.firebaseio.com",
+  projectId: "flood-alertation"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* API */
+const API_KEY = "31cace19702d21fcfe52b2f6a429ccb1";
+
+/* Firebase Ref */
+const sensorRef = ref(db, 'sensor_data');
+
+let currentLat = null;
+let currentLon = null;
+
+/* 🌦️ WEATHER */
+async function getWeather(lat, lon) {
+
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        document.getElementById("City").innerText = "Location: " + data.name;
+        document.getElementById("Temp").innerText = "Temperature: " + data.main.temp + " °C";
+        document.getElementById("Weather").innerText = "Condition: " + data.weather[0].main;
+        document.getElementById("Humidity").innerText = "Humidity: " + data.main.humidity + " %";
+        document.getElementById("Wind").innerText = "Wind Speed: " + data.wind.speed + " m/s";
+
+    } catch (error) {
+        console.log("Error:", error);
+    }
+}
+
+/* 🔥 ML PREDICTION FUNCTION */
+window.predictRainML = async function () {
+
+    if (!currentLat) {
+        alert("Waiting for sensor data...");
+        return;
+    }
+
+    try {
+        // Get forecast data
+        const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${currentLat}&lon=${currentLon}&appid=${API_KEY}&units=metric`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const temp = data.list[0].main.temp;
+        const humidity = data.list[0].main.humidity;
+        const wind = data.list[0].wind.speed;
+
+        // Send to backend
+        const response = await fetch("http://127.0.0.1:5000/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                temp: temp,
+                humidity: humidity,
+                wind: wind
+            })
+        });
+
+        const result = await response.json();
+
+        document.getElementById("FutureRain").innerHTML = `
+            🌧 Rainfall: ${result.rainfall} mm <br>
+            🚨 Risk Level: ${result.risk}
+        `;
+
+    } catch (error) {
+        console.log("Error:", error);
+        document.getElementById("FutureRain").innerText = "Error getting prediction";
+    }
+};
+
+/* 🔥 FIREBASE */
+let cachedLocation = null;
+
+function getUserLocation() {
+    return new Promise((resolve, reject) => {
+
+        if (cachedLocation) {
+            resolve(cachedLocation);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                cachedLocation = {
+                    lat: pos.coords.latitude,
+                    lon: pos.coords.longitude
+                };
+                resolve(cachedLocation);
+            },
+            reject
+        );
+    });
+}
+
+onValue(sensorRef, async (snapshot) => {
+
+    const data = snapshot.val();
+
+    if (!data) return;
+
+    let lat = data.latitude;
+    let lon = data.longitude;
+
+    if (!lat || lat === 0 || !lon || lon === 0) {
+        try {
+            const loc = await getUserLocation();
+            lat = loc.lat;
+            lon = loc.lon;
+        } catch {
+            document.getElementById("City").innerText = "Location unavailable";
+            return;
+        }
+    }
+
+    currentLat = lat;
+    currentLon = lon;
+
+    getWeather(currentLat, currentLon);
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Trend Graphs</title>
+
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+}
+
+/* TITLE */
+h2 {
+    text-align: center;
+    margin-top: 20px;
+    color: #2c3e50;
+}
+
+/* 🔥 DASHBOARD GRID (PRO LOOK) */
+.dashboard {
+    width: 95%;
+    margin: 20px auto;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+
+    gap: 20px;
+}
+
+/* 🔥 CARD STYLE */
+.chart-box {
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+    height: 280px; /* 🔥 fixed height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* TITLE INSIDE CARD */
+.chart-box h3 {
+    text-align: center;
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #34495e;
+}
+
+/* 🔥 CONTROL CANVAS SIZE */
+.chart-box canvas {
+    max-height: 200px !important;
+}
+
+/* BUTTONS */
+.controls {
+    text-align: center;
+    margin: 15px;
+}
+
+.controls button {
+    padding: 8px 12px;
+    margin: 5px;
+    border: none;
+    background: #0c6493;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.controls button:hover {
+    background: #094d70;
+}
+
+@media screen and (max-width: 768px) {
+
+    body {
+        overflow-x: hidden;
+    }
+
+    /* NAVBAR */
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 15px;
+        position: relative;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        width: 100%;
+    }
+
+    .logo img {
+        width: 45px;
+        height: 35px;
+    }
+
+    .logo h1 {
+        font-size: 18px;
+        margin-left: 10px;
+    }
+
+    .menu-icon {
+        display: flex !important;
+        flex-direction: column;
+        gap: 4px;
+        position: absolute;
+        top: 18px;
+        right: 15px;
+        cursor: pointer;
+    }
+
+    .bar {
+        width: 28px;
+        height: 3px;
+        background: white;
+        border-radius: 5px;
+    }
+
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background: #0c6493;
+        margin-top: 15px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .nav-links a {
+        padding: 14px;
+        text-align: center;
+        color: white;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .show-nav {
+        display: flex !important;
+    }
+
+    /* TITLE */
+    h2 {
+        font-size: 22px;
+        margin-top: 20px;
+        padding: 0 10px;
+    }
+
+    /* BUTTONS */
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        margin: 15px 10px;
+    }
+
+    .controls button {
+        flex: 1 1 40%;
+        min-width: 120px;
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    /* DASHBOARD */
+    .dashboard {
+        width: 95%;
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin: 15px auto;
+    }
+
+    /* CHART BOX */
+    .chart-box {
+        height: auto;
+        min-height: 300px;
+        padding: 15px;
+    }
+
+    .chart-box h3 {
+        font-size: 16px;
+    }
+
+    .chart-box canvas {
+        max-height: 220px !important;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="logo">
+        <img src="https://tse4.mm.bing.net/th?id=OIP.m98o3yW6eMNLtZE5A9-QtQHaHa&pid=Api&P=0&h=180">
+        <h1>Flood Monitoring System</h1>
+    </div>
+
+    <div class="menu-icon" onclick="toggleNav()">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+
+    <div class="nav-links" id="nav-links">
+        <a href="index.html">Home</a>
+        <a href="Realtime records.html">Realtime Records</a>
+        <a href="location.html">Location</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="Graphs.html">Trend Graph</a>
+        <a href="weather.html">Weather</a>
+        <a href="login.html">Login</a>
+    </div>
+</nav>
+
+<h2>📊 Flood Analytics Dashboard</h2>
+
+<!-- CONTROLS -->
+<div class="controls">
+    <button onclick="setRange(5)">Last 5</button>
+    <button onclick="setRange(10)">Last 10</button>
+    <button onclick="setRange(20)">Last 20</button>
+    <button onclick="clearGraph()">Clear</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard">
+
+    <!-- LINE CHART -->
+    <div class="chart-box">
+        <h3>Trend Graph</h3>
+        <canvas id="lineChart"></canvas>
+    </div>
+
+    <!-- BAR CHART -->
+    <div class="chart-box">
+        <h3>Current Comparison</h3>
+        <canvas id="barChart"></canvas>
+    </div>
+
+    <!-- PIE CHART -->
+    <div class="chart-box">
+        <h3>Flood Risk</h3>
+        <canvas id="pieChart"></canvas>
+    </div>
+
+</div>
+
+<script>
+function toggleNav(){
+    document.getElementById("nav-links").classList.toggle("show-nav");
+}
+</script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+/* Firebase */
+const firebaseConfig = {
+    apiKey: "AIzaSyApYb8uDfLDh4oI1M5eLOZV_dCcG_-CKG0",
+    authDomain: "flood-alertation.firebaseapp.com",
+    databaseURL: "https://flood-alertation-default-rtdb.firebaseio.com",
+    projectId: "flood-alertation"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const rainRef = ref(db, 'sensor_data/rainfall_intensity');
+const waterRef = ref(db, 'sensor_data/water_level');
+
+/* Data */
+let rainData = [];
+let waterData = [];
+let labels = [];
+let maxPoints = 10;
+
+const THRESHOLD = 100;
+
+/* LINE CHART */
+const lineChart = new Chart(document.getElementById("lineChart"), {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [
+            { label: "Rainfall", data: rainData, tension: 0.4 },
+            { label: "Water Level", data: waterData, tension: 0.4 }
+        ]
+    }
+});
+
+/* BAR CHART */
+const barChart = new Chart(document.getElementById("barChart"), {
+    type: 'bar',
+    data: {
+        labels: ["Rainfall", "Water Level"],
+        datasets: [{
+            data: [0, 0]
+        }]
+    }
+});
+
+/* PIE CHART */
+const pieChart = new Chart(document.getElementById("pieChart"), {
+    type: 'doughnut',
+    data: {
+        labels: ["Safe", "Risk"],
+        datasets: [{
+            data: [100, 0]
+        }]
+    }
+});
+
+/* UPDATE FUNCTION */
+function updateChart() {
+
+    if (labels.length > maxPoints) {
+        labels.shift();
+        rainData.shift();
+        waterData.shift();
+    }
+
+    /* BAR UPDATE */
+    barChart.data.datasets[0].data = [
+        rainData[rainData.length - 1] || 0,
+        waterData[waterData.length - 1] || 0
+    ];
+    barChart.update();
+
+    /* PIE UPDATE */
+    if (waterData[waterData.length - 1] > THRESHOLD) {
+        pieChart.data.datasets[0].data = [20, 80];
+    } else {
+        pieChart.data.datasets[0].data = [90, 10];
+    }
+    pieChart.update();
+
+    lineChart.update();
+}
+
+/* FIREBASE */
+onValue(rainRef, (snap) => {
+    const time = new Date().toLocaleTimeString();
+    labels.push(time);
+    rainData.push(snap.val());
+    updateChart();
+});
+
+onValue(waterRef, (snap) => {
+    waterData.push(snap.val());
+    updateChart();
+});
+
+/* BUTTONS */
+window.setRange = function(points) {
+    maxPoints = points;
+};
+
+window.clearGraph = function() {
+    labels.length = 0;
+    rainData.length = 0;
+    waterData.length = 0;
+    lineChart.update();
+};
+
+</script>
+
+</body>
+</html>

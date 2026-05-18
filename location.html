@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sensor Location</title>
+
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#f2f2f2;
+}
+
+#map{
+    height:85vh;
+    width:95%;
+    margin:20px auto;
+    border-radius:12px;
+    box-shadow:0 0 15px rgba(0,0,0,0.2);
+}
+
+.page-title{
+    text-align:center;
+    margin-top:20px;
+}
+
+@media screen and (max-width: 768px) {
+
+    body {
+        overflow-x: hidden;
+    }
+
+    /* NAVBAR */
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 15px;
+        position: relative;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        width: 100%;
+    }
+
+    .logo img {
+        width: 45px;
+        height: 35px;
+    }
+
+    .logo h1 {
+        font-size: 18px;
+        margin-left: 10px;
+    }
+
+    .menu-icon {
+        display: flex !important;
+        flex-direction: column;
+        gap: 4px;
+        position: absolute;
+        top: 18px;
+        right: 15px;
+        cursor: pointer;
+    }
+
+    .bar {
+        width: 28px;
+        height: 3px;
+        background: white;
+        border-radius: 5px;
+    }
+
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background: #0c6493;
+        margin-top: 15px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .nav-links a {
+        padding: 14px;
+        text-align: center;
+        color: white;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .show-nav {
+        display: flex !important;
+    }
+
+    /* TITLE */
+    .page-title {
+        font-size: 20px;
+        padding: 10px;
+        margin-top: 15px;
+    }
+
+    /* MAP */
+    #map {
+        width: 95%;
+        height: 60vh;
+        margin: 15px auto;
+        border-radius: 12px;
+    }
+
+    /* LEAFLET POPUP TEXT */
+    .leaflet-popup-content {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .leaflet-control-layers {
+        font-size: 12px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="logo">
+        <img src="https://tse4.mm.bing.net/th?id=OIP.m98o3yW6eMNLtZE5A9-QtQHaHa&pid=Api&P=0&h=180">
+        <h1>Flood Monitoring System</h1>
+    </div>
+
+    <div class="menu-icon" onclick="toggleNav()">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+
+    <div class="nav-links" id="nav-links">
+        <a href="index.html">Home</a>
+        <a href="Realtime records.html">Realtime Records</a>
+        <a href="location.html">Location</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="Graphs.html">Trend Graph</a>
+        <a href="weather.html">Weather</a>
+        <a href="login.html">Login</a>
+    </div>
+</nav>
+
+<h2 class="page-title">📍 Sensor Location & Flood Status</h2>
+
+<div id="map"></div>
+
+<script>
+function toggleNav(){
+    document.getElementById("nav-links").classList.toggle("show-nav");
+}
+
+const map = L.map('map').setView([9.9252, 78.1198], 12);
+
+const normalMap = L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { attribution:'© OpenStreetMap' }
+).addTo(map);
+
+const satelliteMap = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+);
+
+const hybridMap = L.layerGroup([
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'),
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}')
+]);
+
+L.control.layers({
+    "Normal": normalMap,
+    "Satellite": satelliteMap,
+    "Hybrid": hybridMap
+}).addTo(map);
+
+setTimeout(() => map.invalidateSize(), 500);
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyApYb8uDfLDh4oI1M5eLOZV_dCcG_-CKG0",
+    authDomain: "flood-alertation.firebaseapp.com",
+    databaseURL: "https://flood-alertation-default-rtdb.firebaseio.com",
+    projectId: "flood-alertation"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const sensorRef = ref(db, 'sensor_data');
+
+const API_KEY = "31cace19702d21fcfe52b2f6a429ccb1";
+
+let marker = null;
+let firstLoad = true;
+let cachedLocation = null;
+
+/* SAME DASHBOARD GPS FALLBACK */
+function getUserLocation() {
+    return new Promise((resolve, reject) => {
+
+        if (cachedLocation) {
+            resolve(cachedLocation);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                cachedLocation = {
+                    lat: pos.coords.latitude,
+                    lon: pos.coords.longitude
+                };
+                resolve(cachedLocation);
+            },
+            (err) => reject(err)
+        );
+    });
+}
+
+async function getWeather(lat, lon){
+    try{
+        const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+        );
+        const data = await res.json();
+        return data.weather[0].main;
+    }catch{
+        return "N/A";
+    }
+}
+
+onValue(sensorRef, async (snapshot) => {
+
+    const d = snapshot.val();
+
+    if (!d) return;
+
+    let lat = d.latitude;
+    let lon = d.longitude;
+
+    /* GPS FALLBACK */
+    if (!lat || lat === 0 || !lon || lon === 0) {
+        try {
+            const loc = await getUserLocation();
+            lat = loc.lat;
+            lon = loc.lon;
+        } catch {
+            lat = 9.9252;
+            lon = 78.1198;
+        }
+    }
+
+    lat = parseFloat(lat);
+    lon = parseFloat(lon);
+
+    const weather = await getWeather(lat, lon);
+
+    let color = "green";
+    let status = "Safe";
+
+    if (d.rainfall_intensity >= 30 && d.water_level >= 25) {
+        color = "red";
+        status = "Flood Alert";
+    } 
+    else if (
+        d.rainfall_intensity >= 20 ||
+        d.water_level >= 10 ||
+        weather === "Rain" ||
+        weather === "Thunderstorm"
+    ) {
+        color = "orange";
+        status = "Warning";
+    }
+
+    const icon = L.icon({
+        iconUrl: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
+        iconSize: [40, 40]
+    });
+
+    if (marker) {
+        marker.setLatLng([lat, lon]);
+        marker.setIcon(icon);
+    } else {
+        marker = L.marker([lat, lon], { icon }).addTo(map);
+    }
+
+    marker.bindPopup(`
+        <b>📍 Sensor Location</b><br>
+        Lat: ${lat.toFixed(6)}<br>
+        Lon: ${lon.toFixed(6)}<br><br>
+        🌧 Rainfall: ${d.rainfall_intensity} mm<br>
+        🌊 Water Level: ${d.water_level} cm<br>
+        🌦 Weather: ${weather}<br>
+        🚨 Status: <b>${status}</b>
+    `);
+
+    if (firstLoad) {
+        map.setView([lat, lon], 15);
+        marker.openPopup();
+        firstLoad = false;
+    }
+});
+</script>
+
+</body>
+</html>

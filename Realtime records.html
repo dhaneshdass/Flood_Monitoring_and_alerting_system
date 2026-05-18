@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Flood Monitoring</title>
+    <style>
+        body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: url('https://img.freepik.com/free-photo/large-tsunami-wave-crashing-into-city_23-2151810054.jpg?ga=GA1.1.1294365376.1726562155&semt=ais_hybrid') no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+}
+
+/* HEADER */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(12, 100, 147, 0.8);
+    padding: 10px 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    margin-left: 20px;
+}
+
+.logo img {
+    width: 60px;
+    height: 45px;
+}
+
+h1 {
+    font-size: 2.5em;
+    color: #fff;
+    margin: 0 20px;
+    text-shadow: 3px 3px 4px rgba(0,0,0,0.6);
+    letter-spacing: 2px;
+    flex-grow: 1;
+    text-align: center;
+}
+
+/* 🔥 MAIN GRID */
+.container {
+    position: relative; /* IMPORTANT for center alert */
+    max-width: 1200px;
+    margin: 50px auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+/* BOX DESIGN */
+.box {
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.box:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* TEXT */
+.box h2 {
+    color: #0c6493;
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+}
+
+.box p {
+    font-size: 1.5em;
+    color: #333;
+    font-weight: bold;
+    margin: 10px 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+/* ALERT TEXT */
+.alert {
+    font-size: 2.5em;
+    color: #ff4d4d;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+}
+
+/* 🔥 KEEP GRID ALIGNMENT PERFECT */
+.container .box:nth-child(4) {
+    grid-column: 1 / 2;  /* Latitude under Rainfall */
+}
+
+.container .box:nth-child(5) {
+    grid-column: 3 / 4;  /* Longitude under Water */
+}
+
+/* 🔥 CENTER ALERT WITHOUT BREAKING GRID */
+.alert-box {
+    position: absolute;
+
+    top: 28%;   /* 🔥 move slightly down from center */
+    left: 38%;
+
+    /* transform: translate(-50%, -50%); */
+
+    z-index: 10;
+}
+.water-box {
+    position: absolute;
+
+    top: 0;
+    right: 0;
+
+    /* transform: translate(-20%, 0); adjust spacing */
+
+    z-index: 5;
+}
+
+/* MOBILE */
+@media screen and (max-width: 768px) {
+
+    body {
+        background-size: cover;
+        overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 12px 15px;
+        gap: 10px;
+    }
+
+    .logo {
+        margin: 0;
+    }
+
+    .logo img {
+        width: 45px;
+        height: 35px;
+    }
+
+    h1 {
+        font-size: 1.2em;
+        margin: 0;
+        text-align: left;
+        letter-spacing: 1px;
+    }
+
+    /* CONTAINER */
+    .container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin: 20px 15px;
+        max-width: 100%;
+        position: static;
+    }
+
+    /* REMOVE ABSOLUTE POSITION */
+    .alert-box,
+    .water-box {
+        position: static !important;
+        width: 100%;
+        transform: none !important;
+    }
+
+    /* BOX */
+    .box {
+        width: 100%;
+        padding: 20px 15px;
+        border-radius: 18px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    }
+
+    .box:hover {
+        transform: none;
+    }
+
+    .box h2 {
+        font-size: 1.1em;
+        margin-bottom: 10px;
+    }
+
+    .box p {
+        font-size: 1.1em;
+        word-break: break-word;
+    }
+
+    /* ALERT */
+    .alert {
+        font-size: 1.4em;
+    }
+}
+    </style>
+</head>
+<body>
+
+    <header>
+        <!-- Logo -->
+        <div class="logo">
+            <img src="https://tse4.mm.bing.net/th?id=OIP.m98o3yW6eMNLtZE5A9-QtQHaHa&pid=Api&P=0&h=180" alt="Flood Monitoring Logo">
+        </div>
+
+        <!-- Title -->
+        <h1>Real-Time Flood Monitoring</h1>
+    </header>
+
+    <div class="container">
+        <!-- Rainfall Intensity -->
+        <div class="box">
+            <h2>Rainfall Intensity</h2>
+            <p id="Rainfall">0 mm/hr</p>
+        </div>
+
+        <!-- Alert Condition -->
+        <div class="box alert-box">
+            <h2>Alert Condition</h2>
+            <p id="AlertCondition" class="alert">Loading...</p>
+        </div>
+
+        <!-- Water Level Distance -->
+        <div class="box water-box">
+            <h2>Water Level Distance</h2>
+            <p id="WaterLevel">0 cm</p>
+        </div>
+
+        <!-- Latitude -->
+        <div class="box">
+            <h2>Latitude</h2>
+            <p id="Latitude">Loading...</p>
+        </div>
+
+        <!-- Longitude -->
+        <div class="box">
+            <h2>Longitude</h2>
+            <p id="Longitude">Loading...</p>
+        </div>
+    </div>
+
+    <script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyApYb8uDfLDh4oI1M5eLOZV_dCcG_-CKG0",
+    authDomain: "flood-alertation.firebaseapp.com",
+    databaseURL: "https://flood-alertation-default-rtdb.firebaseio.com",
+    projectId: "flood-alertation"
+};
+
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
+/* READ COMPLETE SENSOR DATA */
+const sensorRef = ref(database, 'sensor_data');
+
+/* CACHE LOCATION */
+let cachedLocation = null;
+
+/* GET LOCATION LIKE DASHBOARD */
+function getUserLocation() {
+    return new Promise((resolve, reject) => {
+
+        if (cachedLocation) {
+            resolve(cachedLocation);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                cachedLocation = {
+                    lat: pos.coords.latitude,
+                    lon: pos.coords.longitude
+                };
+                resolve(cachedLocation);
+            },
+            (err) => reject(err)
+        );
+    });
+}
+
+/* REALTIME UPDATE */
+onValue(sensorRef, async (snapshot) => {
+
+    const d = snapshot.val();
+
+    if (!d) return;
+
+    let lat = d.latitude;
+    let lon = d.longitude;
+
+    /* IF ESP32 GPS RETURNS 0 */
+    if (!lat || lat === 0 || !lon || lon === 0) {
+        try {
+            const loc = await getUserLocation();
+            lat = loc.lat;
+            lon = loc.lon;
+        } catch {
+            lat = 0;
+            lon = 0;
+        }
+    }
+
+    /* UPDATE UI */
+    document.getElementById('Rainfall').innerText =
+        d.rainfall_intensity + ' mm/hr';
+
+    document.getElementById('WaterLevel').innerText =
+        d.water_level + ' cm';
+
+    document.getElementById('Latitude').innerText =
+        parseFloat(lat).toFixed(5);
+
+    document.getElementById('Longitude').innerText =
+        parseFloat(lon).toFixed(5);
+
+    document.getElementById('AlertCondition').innerText =
+        d.alert_condition;
+
+    /* ALERT POPUP */
+    if (d.alert_condition === "Flood Alert") {
+        alert("🚨 FLOOD ALERT! Move to safe area immediately!");
+    }
+
+});
+
+</script>
+</body>
+</html>
